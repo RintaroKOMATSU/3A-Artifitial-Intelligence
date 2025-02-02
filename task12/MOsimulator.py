@@ -95,8 +95,8 @@ class MOsimulator:
         
         self.plot,  = self.ax.plot(self.x_data_theory, self.y_data_theory, c = 'hotpink', ls = '--', lw = 0.7, zorder=1)
     
-        self.scatter_abc = self.ax.scatter(self.x_data_abc, self.y_data_abc, c='royalblue', s=10, zorder=2, edgecolor = "whitesmoke", linewidth = 0.5)
-        self.scatter_gwo = self.ax.scatter(self.x_data_gwo, self.y_data_gwo, c='green', s=10, zorder=2, edgecolor = "whitesmoke", linewidth = 0.5)
+        self.scatter_abc = self.ax.scatter(self.x_data_abc, self.y_data_abc, c='royalblue', s=10, zorder=2, edgecolor = "whitesmoke", linewidth = 0.5, label="MOABC")
+        self.scatter_gwo = self.ax.scatter(self.x_data_gwo, self.y_data_gwo, c='green', s=10, zorder=2, edgecolor = "whitesmoke", linewidth = 0.5, label="MOGWO")
         
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.fig_frame)
@@ -511,8 +511,8 @@ class MOsimulator:
                 self.scatter_abc.set_offsets(offsets_abc)
             if (self.mode_gwo == True):
                 self.mogwo.update_generation()
-                self.x_data_gwo = self.mogwo.get_population_f1()
-                self.y_data_gwo = self.mogwo.get_population_f2()
+                self.x_data_gwo = self.mogwo.get_EA_f1()
+                self.y_data_gwo = self.mogwo.get_EA_f2()
                 x_min_gwo, x_max_gwo = np.min(self.x_data_gwo), np.max(self.x_data_gwo)
                 y_min_gwo, y_max_gwo = np.min(self.y_data_gwo), np.max(self.y_data_gwo)
                 offsets_gwo = np.column_stack((self.x_data_gwo, self.y_data_gwo))
@@ -540,7 +540,10 @@ class MOsimulator:
             elif(self.mode_gwo == True):
                 generation = self.mogwo.generation
             self.ax.set_title(f"Generation : {generation}")
-                
+            
+            if  generation == self.max_gen:
+                self.sim_start = False
+                self.running = False
             if (self.sim_start == False):
                 self.start_button.configure( fg_color= "#292929", text_color = "white")
                 self.stop_button.configure( fg_color= "#414141", text_color="gray")
@@ -622,12 +625,15 @@ class MOsimulator:
                     x_max = max(x_max_abc, x_max_gwo)
                     y_min = min(y_min_abc, y_min_gwo)
                     y_max = max(y_max_abc, y_max_gwo)
+                    self.ax.legend(handles=[self.scatter_abc, self.scatter_gwo], loc="lower center", bbox_to_anchor=(0.8, -0.15), borderaxespad=0, ncol=2,frameon=False )
                 elif (self.mode_abc == True):
                     x_min, x_max = x_min_abc, x_max_abc
                     y_min, y_max = y_min_abc, y_max_abc
+                    self.ax.legend(handles=[self.scatter_abc], loc="lower center", bbox_to_anchor=(0.8, -0.15), borderaxespad=0, ncol=1,frameon=False )
                 elif (self.mode_gwo == True):
                     x_min, x_max = x_min_gwo, x_max_gwo
                     y_min, y_max = y_min_gwo, y_max_gwo
+                    self.ax.legend(handles=[self.scatter_gwo], loc="lower center", bbox_to_anchor=(0.8, -0.15), borderaxespad=0, ncol=1,frameon=False )
                     
                 self.ax.set_xlim(x_min-0.1, x_max+0.1) 
                 self.ax.set_ylim(y_min-0.1, y_max+0.1)
@@ -659,6 +665,8 @@ class MOsimulator:
     """被覆率を計算"""
     """簡易的にy軸方向をN分割して各領域のうち点が含まれているものの割合を計算"""
     def coverage_rate(self, f1, f2):
+        if (len(f1) == 0):
+            return " "
         if self.pareto_optimal == False:
             return " "
         covered_count = 0
@@ -798,9 +806,18 @@ class MOsimulator:
         ax.yaxis.set_label_coords(-0.1, 0.5)
         ax.set_title(self.ax.get_title())
         ax.grid(linestyle='--', linewidth=0.5)
-
+                
         ax.plot(self.x_data_theory, self.y_data_theory, c = 'r', ls = '--', lw = 1.5, zorder=1) 
-        ax.scatter(self.x_data, self.y_data, c='royalblue', s=20, zorder=2, edgecolor = "whitesmoke", linewidth = 1)
+        scatter_abc = ax.scatter(self.x_data_abc, self.y_data_abc, c='royalblue', s=20, zorder=2, edgecolor = "whitesmoke", linewidth = 1, label = "MOABC")
+        scatter_gwo = ax.scatter(self.x_data_gwo, self.y_data_gwo, c='green', s=20, zorder=2, edgecolor = "whitesmoke", linewidth = 1, label = "MOGWO")
+        
+        if (self.mode_abc == True and self.mode_gwo == True):
+            ax.legend(handles=[scatter_abc, scatter_gwo], loc="lower center", bbox_to_anchor=(0.8, -0.15), borderaxespad=0, ncol=2,frameon=False )
+        elif (self.mode_abc == True):
+            ax.legend(handles=[scatter_abc], loc="lower center", bbox_to_anchor=(0.8, -0.15), borderaxespad=0, ncol=1,frameon=False )
+        elif (self.mode_gwo == True):
+            ax.legend(handles=[scatter_gwo], loc="lower center", bbox_to_anchor=(0.8, -0.15), borderaxespad=0, ncol=1,frameon=False )
+            
         
         plt.rcParams.update({'text.color': 'white', 
                 'axes.labelcolor': 'white', 
@@ -1099,7 +1116,7 @@ class MOABC:
                     v[i] = x[i] + np.random.uniform(0, 2)*(EA_x1[i]-x[i])
                 else:
                     v[i] = x[i] + np.random.uniform(0, 2)*(EA_x2[i]-x[i])
-                #v[i]が無効な場合はx[i]のまま
+
                 if (v[i] < self.x_min[i-2]):
                     v[i] = self.x_min[i-2]
                 elif (v[i] > self.x_max[i-2]):
@@ -1240,17 +1257,19 @@ class MOGWO:
         #外部アーカイブのcrowd distanceを計算
         self.EA[0][1] = 1e8
         self.EA[self.EA_size-1][1] = 1e8
-        EA_f1_size = np.abs(np.max(self.EA[:self.EA_size, 3])-np.min(self.EA[:self.EA_size, 3]))
-        for i in range(1, self.EA_size-1):
-            self.EA[i][1] = np.abs(self.EA[i-1][3]-self.EA[i+1][3]) + np.abs(self.EA[i-1][3]-self.EA[i+1][3])/EA_f1_size
-            
-        self.EA[:self.EA_size] = self.EA[:self.EA_size][np.argsort(self.EA[:self.EA_size, 4])]
-        
+        if self.EA_size > 3:
+            EA_f1_size = np.abs(np.max(self.EA[:self.EA_size, 3])-np.min(self.EA[:self.EA_size, 3]))
+            for i in range(1, self.EA_size-1):
+                self.EA[i][1] = np.abs(self.EA[i-1][3]-self.EA[i+1][3])/EA_f1_size
+                
+        self.EA[:self.EA_size] = self.EA[:self.EA_size][np.argsort(self.EA[:self.EA_size, 4])]  
         self.EA[0][2] = 1e8
         self.EA[self.EA_size-1][2] = 1e8
-        EA_f2_size = np.abs(np.max(self.EA[:self.EA_size, 4])-np.min(self.EA[:self.EA_size, 4]))
-        for i in range(1, self.EA_size-1):
-            self.EA[i][2] = np.abs(self.EA[i-1][4]-self.EA[i+1][4]) + np.abs(self.EA[i-1][4]-self.EA[i+1][4])/EA_f2_size
+        if self.EA_size > 3:
+            EA_f2_size = np.abs(np.max(self.EA[:self.EA_size, 4])-np.min(self.EA[:self.EA_size, 4]))
+            for i in range(1, self.EA_size-1):
+                self.EA[i][2] = np.abs(self.EA[i-1][4]-self.EA[i+1][4])/EA_f2_size
+        
         self.EA[:, 0] = self.EA[:, 1] + self.EA[:, 2]
 
         
@@ -1282,8 +1301,7 @@ class MOGWO:
             x3 = x_delta-A3*D_delta
             
             v[2:] = (x1+x2+x3)/3
-            if not (np.all(v[2:] <= self.x_max) and np.all(v[2:] >= self.x_min)):
-                v = x
+
             for i in range(self.x_size):
                 if v[i+2] > self.x_max[i]:
                     v[i+2] = self.x_max[i]
@@ -1325,18 +1343,19 @@ class MOGWO:
         #f1の最近傍距離を計算
         self.EA[0][1] = 1e8
         self.EA[self.EA_size-1][1] = 1e8
-        EA_f1_size = np.abs(np.max(self.EA[:self.EA_size, 3])-np.min(self.EA[:self.EA_size, 3]))
-        for i in range(1, self.EA_size-1):
-            self.EA[i][1] = np.abs(self.EA[i-1][3]-self.EA[i+1][3]) + np.abs(self.EA[i-1][3]-self.EA[i+1][3])/EA_f1_size
-        
-        #f2の値でソート
-        self.EA[:self.EA_size] = self.EA[:self.EA_size][np.argsort(self.EA[:self.EA_size, 4])]
-        #f2の最近傍距離を計算
+        if self.EA_size > 3:
+            EA_f1_size = max((self.EA[self.EA_size-1, 3]-self.EA[0, 3]), 1e-8)
+            for i in range(1, self.EA_size-1):
+                self.EA[i][1] = np.abs(self.EA[i-1][3]-self.EA[i+1][3])/EA_f1_size
+                
+        self.EA[:self.EA_size] = self.EA[:self.EA_size][np.argsort(self.EA[:self.EA_size, 4])]  
         self.EA[0][2] = 1e8
         self.EA[self.EA_size-1][2] = 1e8
-        EA_f2_size = np.abs(np.max(self.EA[:self.EA_size, 4])-np.min(self.EA[:self.EA_size, 4]))
-        for i in range(1, self.EA_size-1):
-            self.EA[i][2] = np.abs(self.EA[i-1][4]-self.EA[i+1][4]) + np.abs(self.EA[i-1][4]-self.EA[i+1][4])/EA_f2_size
+        if self.EA_size > 3:
+            EA_f2_size = max((self.EA[self.EA_size-1, 4]-self.EA[0, 4]), 1e-8)
+            for i in range(1, self.EA_size-1):
+                self.EA[i][2] = np.abs(self.EA[i-1][4]-self.EA[i+1][4])/EA_f2_size
+        
         self.EA[:, 0] = self.EA[:, 1] + self.EA[:, 2]
         
         #外部アーカイブの大きさが容量を超えた場合
@@ -1381,6 +1400,8 @@ class MOGWO:
         return self.population[:,1]
     
         
+
+
 if __name__ == "__main__":
     root = ctk.CTk()
     MOsimulator(root)

@@ -61,7 +61,7 @@
 \maketitle
 
 \section{序論}
-本課題では，メタヒューリスティックスを用いた多目的最適化シミュレーターを作成した．MOABC（Multi-Objective Artificial Bee Colony）とMOGWO（Multi-Objective Gray Wolf Optimization）の2つのアルゴリズムを実装し，2つの関数に対してどちらかのアルゴリズムを選択して最適化を行うことができるようにした．本レポートでは，2つのアルゴリズムの概要，シミュレーターの使用方法，及び性能評価について述べる．
+本課題では，メタヒューリスティックスを用いた多目的最適化シミュレーターを作成した．MOABC（Multi-Objective Artificial Bee Colony）とMOGWO（Multi-Objective Gray Wolf Optimizer）の2つのアルゴリズムを実装し，2つの関数に対してどちらかのアルゴリズムを選択して最適化を行うことができるようにした．本レポートでは，2つのアルゴリズムの概要，シミュレーターの使用方法，及び性能評価について述べる．
 
 \section{アルゴリズム}
 本章ではシミュレーターに用いたMOABCとMOGWOの2つのアルゴリズムについてそれぞれ説明する．
@@ -253,13 +253,13 @@ $ pip install customtkinter
 \quad 以下のような2目的最適化問題があるとする．
 \begin{itembox}[l]{最適化問題1}
     \vspace{-15pt}
-\begin{align*}
-    \mbox{Mini} & \mbox{mize} \quad f_1, f_2\\
-    \mbox{Subject}& \mbox{ to}  \\
-                      & f_1 = x_1^2\\
-                      & f_2 = (x_1-2)^2\\
+\begin{flalign*}
+    \mbox{Mini} & \mbox{mize} \quad f_1, f_2&\\
+    \mbox{Subject}& \mbox{ to}  &\\
+                      & f_1 = x_1^2&\\
+                      & f_2 = (x_1-2)^2&\\
                       & x_1 \in [-1000,1000]
-\end{align*}
+\end{flalign*}
 \end{itembox}
 \quad このとき，シミュレーターには次のように入力することができる．
 \begin{itembox}[l]{シミュレーターの入力}
@@ -278,15 +278,15 @@ f_2: (x[1]-2)**2
 \quad 今度は例1より複雑な目的関数を考えてみる．以下のような最適化問題が次で定義されているとする．
 \begin{itembox}[l]{最適化問題2}
     \vspace{-15pt}
-\begin{align*}
-    \mbox{Mini} & \mbox{mize} \quad f_1, f_2\\
-    \mbox{Subject}& \mbox{ to}  \\
-                      & f_1 = x_1\\
-                      & f_2 = g\times h\\
-                      & g = 1+10\frac{\sum^N_{i = 2}x_i}{N-1}\\
-                      & h = 1-\left(\frac{f_1}{g}\right)^{0.25}-\frac{f_1}{g}\sin(10\pi f_1)\\
-                      & x_i \in [0,1], \quad (i = 1, \cdots, 10)
-\end{align*}
+    \begin{flalign*}
+        \mbox{Mini} & \mbox{mize} \quad f_1, f_2&\\
+        \mbox{Subject}& \mbox{ to}  &\\
+                            & f_1 = x_1&\\
+                            & f_2 = g\times h&\\
+                            & g = 1+10\frac{\sum^N_{i = 2}x_i}{N-1}&\\
+                            & h = 1-\left(\frac{f_1}{g}\right)^{0.25}-\frac{f_1}{g}\sin(10\pi f_1)&\\
+                            & x_i \in [0,1], \quad (i = 1, \cdots, 10)&
+    \end{flalign*}
 \end{itembox}
 \quad この問題は目的関数 $f_1$ と $f_2$ が別の関数 $g$，$h$ を使って定義されている．このような場合には，シミュレーター上にもサブ関数を用いて目的関数を記述することができる．このとき，関数の親子関係に注意する必要がある．問題では $h$ が $f1$ を用いて定義されているが，本シミュレーターはサブ関数が $f1$ を参照することができないため，少し書き換える必要がある．また，$h$ は $g$ を用いて定義されているため，サブ関数の入力時には $h$ が $g$ を参照できるように添え字に注意しなければならない．以上を考慮したうえで，シミュレーターには次のように入力することができる．
 
@@ -321,11 +321,11 @@ f_2: g[1]*g[2]
 最適化問題2のパレート最適解は $x_1 \in [0, 1]$，$x_i = 0$ $(i \neq 1)$ のときであり，次のように表せる．
 \begin{itembox}[l]{最適化問題2のパレート最適解}
     \vspace{-20pt}
-\begin{align*}
-    &f_1: x_1\\
-    &f_2: 1-x_1^{0.25}-x_1\sin(10\pi x_1)\\
-    &x_1 \in [0, 1]
-\end{align*}
+\begin{flalign*}
+    &f_1: x_1&\\
+    &f_2: 1-x_1^{0.25}-x_1\sin(10\pi x_1)&\\
+    &x_1 \in [0, 1]&
+\end{flalign*}
 \end{itembox}
 これは次のようにしてシミュレーターに入力することができる．
 \begin{itembox}[l]{シミュレーターの入力}
@@ -344,5 +344,141 @@ f_2: 1-x[1]**0.25-x[1]*sin(10*pi*x[1])
 ウィンドウの右下には，3つのボタンがあり，それぞれ左から，シミュレーション開始ボタン，真ん中がシミュレーションの一時停止・再開ボタン，アプリケーションの終了ボタンになっている．3.3節で説明した設定を行った後，左側のボタンを押すことでシミュレーションを開始することができる．シミュレーションが開始されると，グラフ画面に非劣解の集合が表示され，アルゴリズムが実行される．シミュレーションを一時停止する場合は，中央のボタンを押すことで一時停止することができる．一時停止中に再開する場合は，再度中央のボタンを押すことで再開することができる．シミュレーターを使い終わったら，右側のボタンを押すことでアプリケーションを終了することができる．
 \section{性能評価}
 作成したシミュレーターを用いて各アルゴリズムの性能評価を行った．
+\subsection{評価指標}
+性能評価にあたっては以下の2つの指標を用いた．
+\begin{itemize}
+    \item \textbf{被覆率（Cover rate: CR）}\\\quad
+        被覆率は解の多様性を表す指標である．求めるには，目的関数の最大値と最小値を求め，その間を任意の個数に分割する．そうしてできた小領域をパレート解がカバーしている割合を求めればいい・
+    \item \textbf{優越個体割合（Ratio of Non-dominated Individuals: RNI）}\\\quad
+        優越個体割合は，異なる手法から得られた2つのパレート最適解のうち，一方の解が他方の解に対して優越している割合を示す指標である．具体的には，手法Aから得られたパレート最適解のうち，手法Bから得られたパレート最適解に対して優越している解の割合を計算する．この割合が高いほど，手法Aの方が手法Bよりも優れていることを示す．反対にこの割合が低ければ手法Bの方が優れていることになる．
+\end{itemize}
+\subsection{ベンチマーク問題}
+評価のためのベンチマークとして[3]にある合わせて6つの最適化問題を使った．以下にそれぞれの問題とパレート最適解を示す．
+\vspace{10pt}
+
+
+\begin{itembox}[l]{問題1（不連続なパレートフロント）}
+    \vspace{-15pt}
+
+\begin{flalign*}
+    \mbox{Mini} & \mbox{mize} \quad f_1, f_2&\\
+    \mbox{Subject}& \mbox{ to}  &\\
+                        & f_1 = x_1&\\
+                        & f_2 = g\times h&\\
+                        & g = 1+10\frac{\sum^N_{i = 2}x_i}{N-1}&\\
+                        & h = 1-\left(\frac{f_1}{g}\right)^{0.25}-\frac{f_1}{g}\sin(10\pi f_1)&\\
+                        & x_i \in [0,1], \quad (i = 1, \cdots, 10)&
+\end{flalign*}
+\textbf{最適解}
+\begin{flalign*}
+    \quad &f_1: x_1&\\
+          &f_2: 1-x_1^{0.25}-x_1\sin(10\pi x_1)&\\
+          &x_1 \in [0, 1]&
+\end{flalign*}
+\end{itembox}
+\vspace{10pt}
+\begin{itembox}[l]{問題2（偏りのあるパレートフロント）}
+    \vspace{-15pt}
+
+\begin{flalign*}
+    \mbox{Mini} & \mbox{mize} \quad f_1, f_2&\\
+    \mbox{Subject}& \mbox{ to}  &\\
+                        & f_1 = 1-\exp(-4x_1)\sin^6(5\pi x_1)&\\
+                        & f_2 = g\times h&\\
+                        & g = 1+10\left(\frac{\sum^N_{i = 2}x_i}{N-1}\right)^{0.25}&\\
+                        & h = 
+                        \begin{cases}
+                            1-\left(\frac{f_1}{g}\right)^2 \quad &(f_1 < g)\\
+                            0 \quad &(otherwise)
+                        \end{cases}
+                        &\\
+                        & x_i \in [0,1], \quad (i = 1, \cdots, N = 10)&
+\end{flalign*}
+\textbf{最適解}
+\begin{flalign*}
+    \quad &f_1: 1-\exp(-4x_1)\sin^6(5\pi x_1)&\\
+          &f_2: 1-(f_1)^2&\\
+          &x_1 \in [0, 1]&
+\end{flalign*}
+\end{itembox}
+
+\begin{itembox}[l]{問題3（くぼみのあるパレートフロント）}
+    \vspace{-15pt}
+
+\begin{flalign*}
+    \mbox{Mini} & \mbox{mize} \quad f_1, f_2&\\
+    \mbox{Subject}& \mbox{ to}  &\\
+                        & f_1 = x[1]&\\
+                        & f_2 = g\times h&\\
+                        & g = 1+10\frac{\sum^N_{i = 2}x_i}{N-1}&\\
+                        & h = 
+                        \begin{cases}
+                            1-\left(\frac{f_1}{g}\right)^\alpha \quad &(f_1 < g)\\
+                            0 \quad &(otherwise)
+                        \end{cases}
+                        &\\
+                        & x_i \in [0,1], \quad (i = 1, \cdots, N = 10)&
+\end{flalign*}
+\textbf{最適解}
+\begin{flalign*}
+    \quad &f_1: x[1]&\\
+          &f_2: 1-(f_1)^\alpha&\\
+          &x_1 \in [0, 1]&
+\end{flalign*}
+\end{itembox}
+\begin{itembox}[l]{問題4（KUR）}
+    \vspace{-15pt}
+
+\begin{flalign*}
+    \mbox{M} & \mbox{inimize} \quad f_1, f_2&\\
+    \mbox{Sub}& \mbox{ject to}  &\\
+                        & f_1 =  \sum^{N-1}_{i=1}\left(-10\exp\left(-0.2\sqrt{x_i^2+x_{i+2}^2}\right)\right)&\\
+                        & f_2 = \sum^{N}_{i=1}\left(|x_i|^{0.8}+5\sin(x_i)^3\right)&\\
+                        & x_i \in [-5,5]\quad (i = 1, \cdots, N = 10)&
+\end{flalign*}
+最適解は不明
+\end{itembox}
+
+\begin{itembox}[l]{問題5（ZDT4）}
+    \vspace{-15pt}
+
+\begin{flalign*}
+    \mbox{M} & \mbox{inimize} \quad f_1, f_2&\\
+    \mbox{Sub}& \mbox{ject to}  &\\
+                        & f_1 = x[1]&\\
+                        & f_2 = g\times h&\\
+                        & g = 1+10(N-1)+10\sum^N_{i = 2}({x_i}^2-10\cos(4\pi x_i))&\\
+                        & h = 1-\left(\frac{f_1}{g}\right)^{0.5}
+                        &\\
+                        & x_1 \in [0,1],\,\,x_i \in [-5, 5]\quad (i = 2, \cdots, N = 10)&
+\end{flalign*}
+\textbf{最適解}
+\begin{flalign*}
+    \quad &f_1: x[1]&\\
+          &f_2: 1-(f_1)^{0.5}&\\
+          &x_1 \in [0, 1]&
+\end{flalign*}
+\end{itembox}
+
+\begin{itembox}[l]{問題6（ZDT6）}
+    \vspace{-15pt}
+
+\begin{flalign*}
+    \mbox{M} & \mbox{inimize} \quad f_1, f_2&\\
+    \mbox{Sub}& \mbox{ject to}  &\\
+                        & f_1 =  1-\exp(-4x_1)\sin^6(6\pi x_1)&\\
+                        & f_2 = g\times \left(1-\left(\frac{f_1}{g}\right)^2\right) &\\
+                        & g = 1+9\left(\frac{\sum^N_{i = 2}x_i}{N-1}\right)^{0.25}&\\
+                        & x_i \in [0,1]\quad (i = 1, \cdots, N = 10)&
+\end{flalign*}
+\textbf{最適解}
+\begin{flalign*}
+    \quad &f_1: x[1]&\\
+          &f_2: 1-(f_1)^{0.5}&\\
+          &x_1 \in [0, 1]&
+\end{flalign*}
+\end{itembox}
+\subsection{結果}
+
 \section{考察}
 \end{document}
