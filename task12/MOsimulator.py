@@ -58,10 +58,14 @@ class MOsimulator:
         file_menu.add_command(label="Exit", command=self.master.quit)
 
         #シミュレーションメニュー
-        help_menu = tk.Menu(menu_bar, tearoff=False, relief = "flat", bg = "#000000", fg = "white", activebackground = "#444444", activeforeground="white")
-        menu_bar.add_cascade(label="Simulation", menu=help_menu)
-        help_menu.add_command(label="Start Simulation", command=self.start_simulation)
-        help_menu.add_command(label="Pose Simulation", command=self.stop_simulation)
+        sim_menu = tk.Menu(menu_bar, tearoff=False, relief = "flat", bg = "#000000", fg = "white", activebackground = "#444444", activeforeground="white")
+        menu_bar.add_cascade(label="Simulation", menu=sim_menu)
+        sim_menu.add_command(label="Start Simulation", command=self.start_simulation)
+        sim_menu.add_command(label="Pose Simulation", command=self.stop_simulation)
+        sim_menu.add_separator()
+        sim_menu.add_command(label="Show CR", command=self.show_CR)
+        sim_menu.add_command(label="Show RNI", command=self.show_RNI)
+        
 
 
         
@@ -96,7 +100,7 @@ class MOsimulator:
         self.plot,  = self.ax.plot(self.x_data_theory, self.y_data_theory, c = 'hotpink', ls = '--', lw = 0.7, zorder=1)
     
         self.scatter_abc = self.ax.scatter(self.x_data_abc, self.y_data_abc, c='royalblue', s=10, zorder=2, edgecolor = "whitesmoke", linewidth = 0.5, label="MOABC")
-        self.scatter_gwo = self.ax.scatter(self.x_data_gwo, self.y_data_gwo, c='green', s=10, zorder=2, edgecolor = "whitesmoke", linewidth = 0.5, label="MOGWO")
+        self.scatter_gwo = self.ax.scatter(self.x_data_gwo, self.y_data_gwo, marker = 'd', c='lawngreen', s=10, zorder=2, edgecolor = "whitesmoke", linewidth = 0.5, label="MOGWO")
         
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.fig_frame)
@@ -157,7 +161,7 @@ class MOsimulator:
 
         max_gen_label = ctk.CTkLabel( max_gen_frame, text="Maximum Generation:", fg_color= "transparent")
         max_gen_label.pack(side=ctk.LEFT, padx=5)
-        self.max_gen_var = ctk.StringVar(value="500")
+        self.max_gen_var = ctk.StringVar(value="1000")
         self.max_gen_entry = ctk.CTkEntry( max_gen_frame, textvariable=self. max_gen_var, width=50)
         self.max_gen_entry.pack(side=ctk.LEFT, padx=5)
         
@@ -175,7 +179,7 @@ class MOsimulator:
         EA_count_frame.pack( anchor="w", padx=5, pady=5,)
         EA_count_label = ctk.CTkLabel(EA_count_frame, text="Capacity of External Archive:", fg_color= "#292929")
         EA_count_label.pack(side=ctk.LEFT, padx=5)
-        self.EA_count_var = ctk.StringVar(value="200")
+        self.EA_count_var = ctk.StringVar(value="100")
         self.EA_count_entry = ctk.CTkEntry(EA_count_frame, textvariable=self.EA_count_var, width=50)
         self.EA_count_entry.pack(side=ctk.LEFT, padx=5)
         
@@ -652,33 +656,34 @@ class MOsimulator:
             else:
                 self.stop_button.configure(fg_color = "#292929", hover_color = "#414141", text = "▶")
                 self.start_button.configure( fg_color= "#292929", text_color = "white")
-            CR_abc = self.coverage_rate(self.x_data_abc, self.y_data_abc)
-            CR_gwo = self.coverage_rate(self.x_data_gwo, self.y_data_gwo)
             generation = 0
             if (self.mode_abc == True):
                 generation = self.moabc.generation
-            elif(self.mode_gwo == True):
+            if(self.mode_gwo == True):
                 generation = self.mogwo.generation
-            self.ax.set_title(f"Generation : {generation}")
+            title = f"Generation : {generation}"
+
+            self.ax.set_title(title)
             self.canvas.draw()
 
     """被覆率を計算"""
-    """簡易的にy軸方向をN分割して各領域のうち点が含まれているものの割合を計算"""
     def coverage_rate(self, f1, f2):
+        y_t = np.array([])
         if (len(f1) == 0):
             return " "
-        if self.pareto_optimal == False:
-            return " "
+        
         covered_count = 0
         n = len(f1)
-
-        x_t = np.linspace(self.pareto_min[0], self.pareto_max[0], n)
-        f1_theory = np.zeros(n)
-        f2_theory = np.zeros(n)
-        
-        for i in range(n):
-            f1_theory[i], f2_theory[i] = self.pareto_func.calculate_func([x_t[i]])
-        y_t = np.linspace(np.min(f2_theory), np.max(f2_theory), n)
+        if self.pareto_optimal == False:
+            y_t = np.linspace(np.min(f2), np.max(f2), n)
+        else:
+            x_t = np.linspace(self.pareto_min[0], self.pareto_max[0], n)
+            f1_theory = np.zeros(n)
+            f2_theory = np.zeros(n)
+            
+            for i in range(n):
+                f1_theory[i], f2_theory[i] = self.pareto_func.calculate_func([x_t[i]])
+            y_t = np.linspace(np.min(f2_theory), np.max(f2_theory), n)
         for i in range(n-1):
             f2_min = min(y_t[i], y_t[i+1])
             f2_max = max(y_t[i], y_t[i+1])
@@ -689,6 +694,57 @@ class MOsimulator:
         coverage_rate = covered_count / n
         return f"{coverage_rate:.3f}"
     
+    """優越個体割合を計算"""
+    def RNI(self, x_data1, y_data1, x_data2, y_data2):
+        n1 = len(x_data1)
+        n2 = len(x_data2)
+        count1 = 0.0
+        count2 = 0.0
+        for i in range(n1):
+            is_nondominant = True
+            for j in range(n2):
+                if x_data1[i] > x_data2[j] and y_data1[i] > y_data2[j]:
+                    is_nondominant = False
+                    break
+            if is_nondominant:
+                count1 += 1.0
+        for i in range(n2):
+            is_nondominant = True
+            for j in range(n1):
+                if x_data2[i] > x_data1[j] and y_data2[i] > y_data1[j]:
+                    is_nondominant = False
+                    break
+            if is_nondominant:
+                count2 += 1.0
+        count1 = count1/n1
+        count2 = count2/n2
+        RNI = count1/(count1+count2)
+        return f"{RNI:.3f}"
+        
+        
+    
+    def show_CR(self):
+        message = ""
+        if self.mode_abc:
+            CR_abc = self.coverage_rate(self.x_data_abc, self.y_data_abc)
+            message += f"MOABC:\n  CR = {CR_abc}\n"
+        if self.mode_gwo:
+            CR_gwo = self.coverage_rate(self.x_data_gwo, self.y_data_gwo)
+            message += f"MOGWO:\n  CR = {CR_gwo}\n"
+        if self.mode_abc or self.mode_gwo:
+            tk.messagebox.showinfo("Show CR" ,message)
+        
+            
+        
+    
+    def show_RNI(self):
+        if not (self.mode_abc and self.mode_gwo):
+            tk.messagebox.showinfo("RNI" ,f"Please check both algorithms to calculate RNI")
+        rni_abc = self.RNI(self.x_data_abc, self.y_data_abc, self.x_data_gwo, self.y_data_gwo)
+        rni_gwo = self.RNI(self.x_data_gwo, self.y_data_gwo, self.x_data_abc, self.y_data_abc)
+        tk.messagebox.showinfo("Show RNI" ,f"MOABC:\n  RNI = {rni_abc}\n"+f"MOGWO:\n  RNI = {rni_gwo}")
+        
+        
     def save_function(self):
         file_path = tk.filedialog.asksaveasfilename(
             title="Save function",
@@ -804,12 +860,11 @@ class MOsimulator:
         ax.set_ylabel(r"$f_2$", labelpad=10, fontsize = 14)
         ax.xaxis.set_label_coords(0.5, -0.1)
         ax.yaxis.set_label_coords(-0.1, 0.5)
-        ax.set_title(self.ax.get_title())
         ax.grid(linestyle='--', linewidth=0.5)
                 
         ax.plot(self.x_data_theory, self.y_data_theory, c = 'r', ls = '--', lw = 1.5, zorder=1) 
-        scatter_abc = ax.scatter(self.x_data_abc, self.y_data_abc, c='royalblue', s=20, zorder=2, edgecolor = "whitesmoke", linewidth = 1, label = "MOABC")
-        scatter_gwo = ax.scatter(self.x_data_gwo, self.y_data_gwo, c='green', s=20, zorder=2, edgecolor = "whitesmoke", linewidth = 1, label = "MOGWO")
+        scatter_abc = ax.scatter(self.x_data_abc, self.y_data_abc, c='royalblue', s=40, zorder=2, edgecolor = "whitesmoke", linewidth = 1, label = "MOABC")
+        scatter_gwo = ax.scatter(self.x_data_gwo, self.y_data_gwo, marker = 'd', c='lawngreen', s=40, zorder=2, edgecolor = "whitesmoke", linewidth = 1, label = "MOGWO")
         
         if (self.mode_abc == True and self.mode_gwo == True):
             ax.legend(handles=[scatter_abc, scatter_gwo], loc="lower center", bbox_to_anchor=(0.8, -0.15), borderaxespad=0, ncol=2,frameon=False )
@@ -827,8 +882,8 @@ class MOsimulator:
         
         file_path = tk.filedialog.asksaveasfilename(
             title="Save Figure",
-            defaultextension=".png",
-            initialfile = "output.png",
+            defaultextension=".pdf",
+            initialfile = "output.pdf",
             filetypes=[("PNG file", "*.png"), ("PDF file", "*.pdf"), ("All file", "*.*")]
         )
         if file_path:
@@ -868,28 +923,35 @@ class Function:
     """SUM関数"""
     def SUM(self, x, start, end, func_expr):
         result = 0
-        if (start < 1 or start > self.x_size):
+        if (start < 1):
             raise ValueError()
-        if (end < 1 or end > self.x_size):
+        if (end < 1):
+            raise ValueError()
+        if (start > end):
             raise ValueError()
         for i in range(start, end + 1):
             expr = func_expr.replace("x[i]", f"x[{i-1}]")
             expr = expr.replace("x[i+1]", f"x[{i}]")
             expr = expr.replace("x[i-1]", f"x[{i-2}]")
+            expr = re.sub(r"\bi\b", f"{i}", expr)
+
             result += eval(expr, {"__builtins__": None}, {"x": x, "np": np, "IF" : self.IF})
         return result
     
     """PRODUCT関数"""
     def PRODUCT(self, x, start, end, func_expr):
         result = 1
-        if (start < 1 or start > self.x_size):
+        if (start < 1):
             raise ValueError()
-        if (end < 1 or end > self.x_size):
+        if (end < 1):
+            raise ValueError()
+        if (start > end):
             raise ValueError()
         for i in range(start, end + 1):
             expr = func_expr.replace("x[i]", f"x[{i-1}]")
             expr = expr.replace("x[i+1]", f"x[{i}]")
             expr = expr.replace("x[i-1]", f"x[{i-2}]")
+            expr = re.sub(r"\bi\b", f"{i}", expr)
             result *= eval(expr, {"__builtins__": None}, {"x": x, "np": np, "IF" : self.IF})
         return result
     
@@ -1159,6 +1221,7 @@ class MOABC:
             
             # f1の最近傍距離を計算
             EA_f1_size = np.abs(np.max(self.EA[:self.EA_size, 0])-np.min(self.EA[:self.EA_size, 0]))
+            EA_f1_size = max(EA_f1_size, 1e-8)
             #端の値は無限大
             EA_crowd_distance[0][1] = 1e8
             EA_crowd_distance[self.EA_size-1][1] = 1e8
@@ -1169,6 +1232,7 @@ class MOABC:
             # f2の最近傍距離を計算
             EA_crowd_distance = EA_crowd_distance[np.argsort(EA_crowd_distance[:self.EA_size, 4])]
             EA_f2_size =np.abs(np.max(self.EA[:self.EA_size, 1])-np.min(self.EA[:self.EA_size, 1]))
+            EA_f2_size = max(EA_f2_size, 1e-8)
             #端の値は無限大
             EA_crowd_distance[0][2] = 1e8
             EA_crowd_distance[self.EA_size-1][2] = 1e8
@@ -1345,6 +1409,8 @@ class MOGWO:
         self.EA[self.EA_size-1][1] = 1e8
         if self.EA_size > 3:
             EA_f1_size = max((self.EA[self.EA_size-1, 3]-self.EA[0, 3]), 1e-8)
+            EA_f1_size = max(EA_f1_size, 1e-8)
+            
             for i in range(1, self.EA_size-1):
                 self.EA[i][1] = np.abs(self.EA[i-1][3]-self.EA[i+1][3])/EA_f1_size
                 
@@ -1353,6 +1419,7 @@ class MOGWO:
         self.EA[self.EA_size-1][2] = 1e8
         if self.EA_size > 3:
             EA_f2_size = max((self.EA[self.EA_size-1, 4]-self.EA[0, 4]), 1e-8)
+            EA_f2_size = max(EA_f2_size, 1e-8)
             for i in range(1, self.EA_size-1):
                 self.EA[i][2] = np.abs(self.EA[i-1][4]-self.EA[i+1][4])/EA_f2_size
         
