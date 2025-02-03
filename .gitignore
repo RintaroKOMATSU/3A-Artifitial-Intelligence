@@ -3,4 +3,5 @@
 *.out
 *.o
 *.zip
-*MO.py
+*.csv
+*.m
