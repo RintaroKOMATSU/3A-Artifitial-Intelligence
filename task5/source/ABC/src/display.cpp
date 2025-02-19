@@ -7,8 +7,8 @@
 #include "display.h"
 #include <GL/glut.h>
 
-#define WINDOW_X (800)
-#define WINDOW_Y (800)
+#define WINDOW_X (1000)
+#define WINDOW_Y (1000)
 #define WINDOW_NAME "Result"
 
 #define P_COLOR {10, 0.5, 1}

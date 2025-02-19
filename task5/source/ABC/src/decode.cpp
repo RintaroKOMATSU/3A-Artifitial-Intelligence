@@ -2,33 +2,26 @@
 #include <string>
 #include "decode.h"
 
-static void syntax_error(const std::string& input, const std::string::const_iterator& p) {
-    int idx = std::distance(input.begin(), p);
-    std::cerr << "  ";
-    for (int i = 0; i < idx; i++) {
-        std::cerr << " ";
-    }
-    std::cerr << "^\n";
-    std::cerr << "syntax error " << "\n";
-    exit(1);
+static int syntax_error(const std::string& input, const int p) {
+    return p;
 }
 
-std::string decode(const std::string input) {
-    static auto p = input.begin();
+std::string decode(const std::string input, int& p) {
     std::string output = "";
+    int error_idx;
     while (true) {
-        switch (*p) {
+        switch (input[p]) {
         case 'H':{
             p++;
-            while (*p == ' ') {
+            while (input[p] == ' ') {
                 p++;
             }
-            if ('1' <= *p && *p <= '9') {
+            if ('1' <= input[p] && input[p] <= '9') {
                 std::string n = "";
-                while ('0' <= *p && *p <= '9') {
-                    n+= *p;
+                while ('0' <= input[p] && input[p] <= '9') {
+                    n+= input[p];
                     p++;
-                    while (*p == ' ') {
+                    while (input[p] == ' ') {
                         p++;
                     }
                 }
@@ -42,15 +35,15 @@ std::string decode(const std::string input) {
         }
         case 'P': {
             p++;
-            while (*p == ' ') {
+            while (input[p] == ' ') {
                 p++;
             }
-            if ('1' <= *p && *p <= '9') {
+            if ('1' <= input[p] && input[p] <= '9') {
                 std::string n = "";
-                while ('0' <= *p && *p <= '9') {
-                    n+= *p;
+                while ('0' <= input[p] && input[p] <= '9') {
+                    n+= input[p];
                     p++;
-                    while (*p == ' ') {
+                    while (input[p] == ' ') {
                         p++;
                     }
                 }
@@ -64,15 +57,15 @@ std::string decode(const std::string input) {
         }
         case '(': {
             p++;
-            while (*p == ' ') {
+            while (input[p] == ' ') {
                 p++;
             }
-            std::string a = decode(input);
-            switch (*p) {
+            std::string a = decode(input, p);
+            switch (input[p]) {
             case '1' ... '9': {
                 std::string n = "";
-                while ('0' <= *p && *p <= '9') {
-                    n+= *p;
+                while ('0' <= input[p] && input[p] <= '9') {
+                    n+= input[p];
                     p++;
                 }
                 for (int i = 0; i < stoi(n) ; i++) {
@@ -81,13 +74,14 @@ std::string decode(const std::string input) {
                 break;
             }
             default:
-                syntax_error(input, p);
+                error_idx =  syntax_error(input, p);
+                return "0"+std::to_string(error_idx);
             }
         break;
         }
         case ')': {
             p++;
-            while (*p == ' ') {
+            while (input[p] == ' ') {
                 p++;
             }
             return output;
@@ -97,10 +91,12 @@ std::string decode(const std::string input) {
             break;
         }
         default:
-            syntax_error(input, p);
+            error_idx = syntax_error(input, p);
+            return "0"+std::to_string(error_idx);
         }
-        if (p == input.end()) {
+        if (p == (int)input.size()) {
             return output;
+            
         }
     }  
 }
