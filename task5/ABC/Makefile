@@ -1,7 +1,7 @@
 CXX = g++
 
 
-CXXFLAGS = -Wall -O2 -Iinclude -fopenmp
+CXXFLAGS = -Wall  -Iinclude -O2
 LDLIBS =  -lglut -lGL -lGLU 
 
 SRCS = $(wildcard src/*.cpp)

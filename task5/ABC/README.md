@@ -1,6 +1,6 @@
 # Protein Folding Optimization using ABC Algorithm
 
-This project implements protein folding optimization using the Artificial Bee Colony (ABC) algorithm. The program simulates protein folding in both 2D and 3D space and visualizes the results using OpenGL.
+This project implements protein folding optimization based on HP lattice model, using the Artificial Bee Colony (ABC) algorithm. The program simulates protein folding in both 2D and 3D space and visualizes the results using OpenGL.
 
 ## Features
 
@@ -115,6 +115,7 @@ The configuration process includes the following parameters:
 ✔ Input array: H10H2(PH)3(P3)2HPH4(PH)3PH2
 ```
 
+
 **Supported Syntax:**
 - **Single amino acids**: `H` (hydrophobic), `P` (polar)
 - **Repetition notation**: `H10` = `HHHHHHHHHH` (10 hydrophobic amino acids)
@@ -129,6 +130,17 @@ The configuration process includes the following parameters:
 
 **Default Sequence:** `H10H2(PH)3(P3)2HPH4(PH)3PH2`
 - Decodes to: `HHHHHHHHHHHHPHPHPHPPPPPPHPHHHHPHPHPHPHH` (39 amino acids)
+
+**Examples**
+
+```
+length   sequence
+ 20      (HP)2PH2PHP2HPH2P2HPH
+ 48      P2HP2H2P2H2P5H10P6H2P2H2P2HP2H5
+ 48      HPH2P2H4PH3P2H2P2HPH2PHPH2P2H2P3HP8H2
+ 48      PHPH2P2HPH3P2H2PH2P3H5P2HPH2(PH)2P4HP2(HP)2
+ 48      PH2P6H2P3H3PHP2HPH2(P2H)2P2H2P2H7P2H2
+```
 
 ### 3. Number of Generations
 
@@ -265,6 +277,85 @@ The fitness function counts the number of hydrogen bonds between non-adjacent hy
 - **R (-1)**: Right turn
 - **U (2)**: Up (3D only)
 - **D (-2)**: Down (3D only)
+
+## Trouble Shooting
+
+### Memory Issues
+
+When using large population sizes (e.g., > 1,000) or long protein sequences, the program may consume significant amounts of memory and potentially cause out-of-memory errors. If you encounter memory-related issues, consider the following solutions:
+
+#### 1. Reduce Parameters
+
+- Decrease the population size
+- Use shorter protein sequences for testing
+- Reduce the number of generations
+
+#### 2. Enable Swap Memory (Linux)
+
+If you need to use large parameters, you can create additional swap space to extend available memory:
+
+**Check current memory and swap usage:**
+
+```bash
+# Check memory usage
+free -h
+
+# Check current swap
+swapon --show
+```
+
+**Create a swap file (example: 4GB):**
+
+```bash
+# Create a 4GB swap file
+sudo fallocate -l 4G /swapfile
+
+# Set correct permissions
+sudo chmod 600 /swapfile
+
+# Set up the swap space
+sudo mkswap /swapfile
+
+# Enable the swap file
+sudo swapon /swapfile
+
+# Verify the swap is active
+swapon --show
+```
+
+**Make swap permanent (optional):**
+```bash
+# Add to /etc/fstab to make swap persistent across reboots
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+**Remove swap when no longer needed:**
+```bash
+# Disable swap
+sudo swapoff /swapfile
+
+# Remove the swap file
+sudo rm /swapfile
+
+# Remove from /etc/fstab if added
+sudo sed -i '/\/swapfile/d' /etc/fstab
+```
+
+#### 3. Memory Usage Guidelines
+
+**Estimated memory usage per individual in population:**
+- 2D folding: ~1-2 KB per amino acid
+- 3D folding: ~2-4 KB per amino acid
+
+**Example calculations:**
+- 50 amino acids, 1000 population, 3D: ~200 MB
+- 100 amino acids, 5000 population, 3D: ~2 GB
+- 200 amino acids, 10000 population, 3D: ~16 GB
+
+**Recommended limits without additional swap:**
+- Systems with 8GB RAM: Population ≤ 5,000
+- Systems with 16GB RAM: Population ≤ 10,000
+- Systems with 32GB RAM: Population ≤ 20,000
 
 ## Example Output
 
