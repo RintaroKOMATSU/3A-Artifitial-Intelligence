@@ -1,3 +1,12 @@
-/data/simulation_log*
-/src/*.o
-/bin/*
+# ログファイル
+data/simulation_log_*.txt
+data/simulation_log*
+
+# オブジェクトファイル (複数のパターンで確実にカバー)
+src/*.o
+*.o
+
+# バイナリファイル
+bin/
+bin/*
+bin/main
