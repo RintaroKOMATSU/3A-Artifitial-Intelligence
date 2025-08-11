@@ -1,1 +1,3 @@
 /data/simulation_log*
+/src/*.o
+/bin/*
