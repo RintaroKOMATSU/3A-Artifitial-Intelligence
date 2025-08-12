@@ -15,6 +15,7 @@ This project implements protein folding optimization based on HP lattice model, 
 ### System Dependencies
 
 #### Ubuntu/Debian
+
 ```bash
 sudo apt update
 sudo apt-get install freeglut3 freeglut3-dev
@@ -29,7 +30,7 @@ sudo apt-get install freeglut3 freeglut3-dev
 
 ## Project Structure
 
-```
+```plain text
 .
 ├── Makefile             # Build configuration
 ├── README.md            # This file
@@ -169,6 +170,7 @@ length   sequence
 ```
 
 **Parameters:**
+
 - **Default:** 1000 individuals
 - **Valid range:** Any positive integer
 - **Impact on performance:**
@@ -185,6 +187,7 @@ length   sequence
 ```
 
 **Parameters:**
+
 - **Default:** 50 trials
 - **Valid range:** Any positive integer
 - **Algorithm behavior:**
@@ -199,11 +202,12 @@ length   sequence
 The configuration system includes comprehensive validation:
 
 1. **Dimension Selection**: Only arrow keys and Enter are accepted
-2. **Protein Sequence**: 
+
+2. **Protein Sequence**:
    - Syntax validation with error position indicators
    - Minimum length enforcement (≥ 4 amino acids)
    - Automatic decoding of compact notation
-3. **Numeric Parameters**: 
+3. **Numeric Parameters**:
    - Positive integer validation for all numeric inputs
    - Clear error messages with retry prompts
 4. **Default Values**: Press Enter without input to use default values
@@ -282,7 +286,7 @@ The fitness function counts the number of hydrogen bonds between non-adjacent hy
 
 ### Memory Issues
 
-When using large population sizes (e.g., > 1,000) or long protein sequences, the program may consume significant amounts of memory and potentially cause out-of-memory errors. If you encounter memory-related issues, consider the following solutions:
+When using large population sizes (e.g., > 1,0000) or long protein sequences, the program may consume significant amounts of memory and potentially cause out-of-memory errors. If you encounter memory-related issues, consider the following solutions:
 
 #### 1. Reduce Parameters
 
@@ -324,12 +328,14 @@ swapon --show
 ```
 
 **Make swap permanent (optional):**
+
 ```bash
 # Add to /etc/fstab to make swap persistent across reboots
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
 **Remove swap when no longer needed:**
+
 ```bash
 # Disable swap
 sudo swapoff /swapfile
@@ -341,22 +347,6 @@ sudo rm /swapfile
 sudo sed -i '/\/swapfile/d' /etc/fstab
 ```
 
-#### 3. Memory Usage Guidelines
-
-**Estimated memory usage per individual in population:**
-- 2D folding: ~1-2 KB per amino acid
-- 3D folding: ~2-4 KB per amino acid
-
-**Example calculations:**
-- 50 amino acids, 1000 population, 3D: ~200 MB
-- 100 amino acids, 5000 population, 3D: ~2 GB
-- 200 amino acids, 10000 population, 3D: ~16 GB
-
-**Recommended limits without additional swap:**
-- Systems with 8GB RAM: Population ≤ 5,000
-- Systems with 16GB RAM: Population ≤ 10,000
-- Systems with 32GB RAM: Population ≤ 20,000
-
 ## Example Output
 
 ```plain text
@@ -367,31 +357,31 @@ sudo sed -i '/\/swapfile/d' /etc/fstab
 
 === Parameters ===
 Input Sequence: 
-   HHHHHHHHHHHHPHPHPHPPPPPPHPHHHHPHPHPHPHH
-Input Length: 39
+   HPHPPHHPHPPHPHHPPHPH
+Input Length: 20
 Population Size: 1000 
 Generations: 100
 Trial Limit: 50
-Optimization Mode: 3D
+Optimization Mode: 2D
 
 === Evolution Process ===
 
 Generating initial population ...
 Initial population generated
-Initial best fitness: 12 hydrogen bonds
-Log file: data/simulation_log_20250811_175935.txt
+Initial best fitness: 5 hydrogen bonds
+Log file: data/simulation_log_20250812_120853.txt
 
-Generation   10/100 │ [███▶                          ]  10.0% │ Best: 22 │ Avg: 13.3 │ Conv:   1/1000
-Generation   20/100 │ [██████▶                       ]  20.0% │ Best: 23 │ Avg: 16.3 │ Conv:   3/1000
-Generation   30/100 │ [█████████▶                    ]  30.0% │ Best: 23 │ Avg: 17.9 │ Conv:  10/1000
-Generation   40/100 │ [████████████▶                 ]  40.0% │ Best: 25 │ Avg: 18.9 │ Conv:   4/1000
-Generation   50/100 │ [███████████████▶              ]  50.0% │ Best: 25 │ Avg: 19.7 │ Conv:   7/1000
-Generation   60/100 │ [██████████████████▶           ]  60.0% │ Best: 26 │ Avg: 20.1 │ Conv:   1/1000
-Generation   70/100 │ [█████████████████████▶        ]  70.0% │ Best: 27 │ Avg: 20.2 │ Conv:   1/1000
-Generation   80/100 │ [████████████████████████▶     ]  80.0% │ Best: 27 │ Avg: 20.6 │ Conv:   1/1000
-Generation   90/100 │ [███████████████████████████▶  ]  90.0% │ Best: 27 │ Avg: 20.9 │ Conv:   3/1000
-Generation  100/100 │ [██████████████████████████████] 100.0% │ Best: 27 │ Avg: 21.0 │ Conv:   7/1000
-  Detailed Statistics: Max=27.0 Min=1.0 Mean=21.10 StdDev=3.98 Convergence=7/1000
+Generation   10/100 │ [███▶                          ]  10.0% │ Best:  8 │ Avg:  4.5 │ Conv:   8/1000
+Generation   20/100 │ [██████▶                       ]  20.0% │ Best:  9 │ Avg:  5.7 │ Conv:  12/1000
+Generation   30/100 │ [█████████▶                    ]  30.0% │ Best:  9 │ Avg:  6.4 │ Conv:  35/1000
+Generation   40/100 │ [████████████▶                 ]  40.0% │ Best:  9 │ Avg:  6.9 │ Conv:  89/1000
+Generation   50/100 │ [███████████████▶              ]  50.0% │ Best:  9 │ Avg:  7.4 │ Conv: 156/1000
+Generation   60/100 │ [██████████████████▶           ]  60.0% │ Best:  9 │ Avg:  7.5 │ Conv: 249/1000
+Generation   70/100 │ [█████████████████████▶        ]  70.0% │ Best:  9 │ Avg:  7.6 │ Conv: 330/1000
+Generation   80/100 │ [████████████████████████▶     ]  80.0% │ Best:  9 │ Avg:  7.8 │ Conv: 410/1000
+Generation   90/100 │ [███████████████████████████▶  ]  90.0% │ Best:  9 │ Avg:  7.8 │ Conv: 468/1000
+Generation  100/100 │ [██████████████████████████████] 100.0% │ Best:  9 │ Avg:  7.9 │ Conv: 530/1000
+  Detailed Statistics: Max=9.0 Min=0.0 Mean=7.84 StdDev=1.78 Convergence=528/1000
 
 Simulation finished
 
@@ -400,19 +390,19 @@ Simulation finished
 ╠══════════════════════════════════════════════════════════╣
 ║ Configuration:                                           ║
 ║   Input Sequence:                                        ║
-║     HHHHHHHHHHHHPHPHPHPPPPPPHPHHHHPHPHPHPHH              ║
-║   Input Length: 39                                       ║
+║     HPHPPHHPHPPHPHHPPHPH                                 ║
+║   Input Length: 20                                       ║
 ║   Population Size: 1000                                  ║
 ║   Max Generations: 100                                   ║
 ║   Trial Limit: 50                                        ║
-║   Optimization Mode: 3D                                  ║
+║   Optimization Mode: 2D                                  ║
 ╠══════════════════════════════════════════════════════════╣
 ║ Results:                                                 ║
-║   Maximum Hydrogen Bonds: 27                             ║
-║   Execution Time: 25.727 sec                             ║
+║   Maximum Hydrogen Bonds: 9                              ║
+║   Execution Time: 5.275 sec                              ║
 ╚══════════════════════════════════════════════════════════╝
 
-Simulation log has been written to: data/simulation_log_20250811_175935.txt
+Simulation log has been written to: data/simulation_log_20250812_120853.txt
 
 Opening 3D visualization...
 ```

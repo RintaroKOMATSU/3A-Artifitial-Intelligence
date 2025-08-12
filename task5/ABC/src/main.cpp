@@ -86,7 +86,6 @@ void logError(const std::string& errorType, const std::string& errorMessage,
         logFile << "Generation: " << generation << "\n";
     }
     
-    logFile << "Program Status: TERMINATED ABNORMALLY\n";
     logFile << std::string(70, '=') << "\n";
     logFile.flush();
     
@@ -131,7 +130,7 @@ void signalHandler(int signum) {
     
     // クリーンアップ
     if (logFile.is_open()) {
-        logFile << "\nEmergency shutdown initiated...\n";
+        logFile << "\nExited\n";
         logFile.close();
     }
     
@@ -236,11 +235,11 @@ void logGenerationStats(int generation, const Statistics& stats, bool newBest = 
 // ログファイルを閉じる関数
 void finalizeLog(const Statistics& finalStats, double executionTime, const std::vector<int>& optimalSequence) {
     if (!logFile.is_open()) return;
-    
-    logFile << "\nSimulation finished\n";
+    logFile << std::string(70, '-') << "\n";
+    logFile << "\nEvolution process finished\n";
     logFile <<  "\n\n";
     
-    logFile << "FINAL RESULTS:\n";
+    logFile << "Final Results:\n";
     logFile << "-------------\n";
     logFile << "Maximum Hydrogen Bonds    : " << (int)finalStats.max << "\n";
     logFile << "Minimum Fitness          : " << (int)finalStats.min << "\n";
@@ -249,7 +248,7 @@ void finalizeLog(const Statistics& finalStats, double executionTime, const std::
     logFile << "Converged Individuals    : " << finalStats.convergence_count << "/" << N << "\n";
     logFile << "Execution Time           : " << std::setprecision(3) << executionTime << " seconds\n\n";
     
-    logFile << "OPTIMAL SEQUENCE:\n";
+    logFile << "Optimal Sequence:\n";
     logFile << "----------------\n";
     logFile << "Moves: ";
     for (size_t i = 0; i < optimalSequence.size(); i++) {
@@ -267,7 +266,6 @@ void finalizeLog(const Statistics& finalStats, double executionTime, const std::
     auto now = std::chrono::system_clock::now();
     auto time_t = std::chrono::system_clock::to_time_t(now);
     logFile << "Simulation finished: " << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S") << "\n";
-    logFile << "Status: COMPLETED SUCCESSFULLY\n";
     logFile << std::string(70, '=') << "\n";
     
     logFile.close();
@@ -340,17 +338,14 @@ int main() {
         
         int optimal_fval = -1; //水素結合の数の最大値
         // メモリ予約（効率的）
-        population.reserve(N);
+        population.resize(N);
         for (int i = 0; i < N; i++) {
-            population[i].reserve(sequence_length);
+            population[i].resize(sequence_length);
             population[i].clear();
         }
-        population_fval.reserve(N);
-        population_s.reserve(N);
-        
-        // 初期化
-        population_fval.clear();
-        population_s.clear();
+        population_fval.resize(N);
+        population_s.resize(N);
+
 
         std::cout << BOLD << "\n=== Evolution Process ===\n\n" << RESET;
         std::cout << "Generating initial population ...\n";
